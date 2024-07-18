@@ -1,0 +1,12 @@
+{
+  "applicationNodes": [
+    {
+      "translationPath": "assets/i18n/",
+      "behaviorURI": "rtde-communicator.worker.js",
+      "presenterURI": "main.js",
+      "componentTagName": "urcaps-r-us-advanced-rtde-frontend-rtde-communicator"
+    }
+  ],
+  "programNodes": [],
+  "smartSkills": []
+}

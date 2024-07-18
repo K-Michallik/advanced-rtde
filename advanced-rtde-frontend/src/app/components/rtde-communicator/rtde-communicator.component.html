@@ -1,0 +1,19 @@
+@if (applicationNode) {
+    <div class="component">
+        <div class="section">
+            <h1>Robot State Monitor</h1>
+            <h3 *ngIf="(runtimeState$ | async) !== null">Runtime State: {{ runtimeState$ | async }}</h3>
+            <h3 *ngIf="(safetyStatus$ | async) !== null">Safety Status: {{ safetyStatus$ | async }}</h3>
+            <div *ngIf="(actualTcpPose$ | async) !== null">
+                <h3>Actual TCP Pose:</h3>
+                <ul>
+                  <li *ngFor="let pose of actualTcpPose$ | async">{{ pose }}</li>
+                </ul>
+              </div>
+            <p *ngIf="error$ | async">{{ error$ | async }}</p>
+
+            <ur-button (handleClick)="startMonitoring()">Start Monitoring</ur-button>
+            <ur-button (handleClick)="stopMonitoring()">Stop Monitoring</ur-button>
+        </div>
+    </div>
+}

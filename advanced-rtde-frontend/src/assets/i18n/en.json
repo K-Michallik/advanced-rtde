@@ -1,0 +1,10 @@
+{
+  "application": {
+    "nodes": {
+      "urcaps-r-us-advanced-rtde-frontend-rtde-communicator": {
+        "title": "Rtde Communicator",
+        "supportiveText": "Rtde Communicator - Supportive Text"
+      }
+    }
+  }
+}
