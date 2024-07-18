@@ -25,6 +25,8 @@ export class RtdeCommunicatorComponent implements ApplicationPresenter, OnChange
     readonly actualTcpPose$ = this.rtdeService.actualTcpPose$;
     readonly error$ = this.rtdeService.error$;
 
+    protected isMonitoring: boolean = false;
+
     constructor(
         protected readonly translateService: TranslateService,
         protected readonly cd: ChangeDetectorRef
@@ -61,6 +63,7 @@ export class RtdeCommunicatorComponent implements ApplicationPresenter, OnChange
     startMonitoring(): void {
         this.rtdeService.startMonitoring().subscribe({
             next: () => {
+                this.isMonitoring = true;
                 console.log('Monitoring started.');
             },
             error: error => {
@@ -72,6 +75,7 @@ export class RtdeCommunicatorComponent implements ApplicationPresenter, OnChange
     stopMonitoring(): void {
         this.rtdeService.stopMonitoring().subscribe({
             next: () => {
+                this.isMonitoring = false;
                 console.log('Monitoring stopped.');
             },
             error: error => {

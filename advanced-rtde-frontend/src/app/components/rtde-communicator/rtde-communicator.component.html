@@ -1,19 +1,31 @@
 @if (applicationNode) {
-    <div class="component">
-        <div class="section">
-            <h1>Robot State Monitor</h1>
-            <h3 *ngIf="(runtimeState$ | async) !== null">Runtime State: {{ runtimeState$ | async }}</h3>
-            <h3 *ngIf="(safetyStatus$ | async) !== null">Safety Status: {{ safetyStatus$ | async }}</h3>
-            <div *ngIf="(actualTcpPose$ | async) !== null">
-                <h3>Actual TCP Pose:</h3>
-                <ul>
-                  <li *ngFor="let pose of actualTcpPose$ | async">{{ pose }}</li>
+  <div class="component">
+      <div class="section">
+          <h1>Robot State Monitor</h1>
+          @if (runtimeState$ | async; as runtimeState) {
+              <h3>Runtime State: {{ runtimeState }}</h3>
+          }
+          @if (safetyStatus$ | async; as safetyStatus) {
+              <h3>Safety Status: {{ safetyStatus }}</h3>
+          }
+          @if (actualTcpPose$ | async; as actualTcpPose) {
+              <div>
+                  <h3>Actual TCP Pose:</h3>
+                  <ul>
+                    <li>X: {{ actualTcpPose[0] | number:'1.4-4' }}</li>
+                    <li>Y: {{ actualTcpPose[1] | number:'1.4-4' }}</li>
+                    <li>Z: {{ actualTcpPose[2] | number:'1.4-4' }}</li>
+                    <li>RX: {{ actualTcpPose[3] | number:'1.4-4' }}</li>
+                    <li>RY: {{ actualTcpPose[4] | number:'1.4-4' }}</li>
+                    <li>RZ: {{ actualTcpPose[5] | number:'1.4-4' }}</li>
                 </ul>
               </div>
-            <p *ngIf="error$ | async">{{ error$ | async }}</p>
-
-            <ur-button (handleClick)="startMonitoring()">Start Monitoring</ur-button>
-            <ur-button (handleClick)="stopMonitoring()">Stop Monitoring</ur-button>
-        </div>
-    </div>
+          }
+          @if (error$ | async; as errorMessage) {
+              <p>{{ errorMessage }}</p>
+          }
+          <ur-button (handleClick)="startMonitoring()" [disabled]="isMonitoring">Start Monitoring</ur-button>
+          <ur-button (handleClick)="stopMonitoring()" [disabled]="!isMonitoring">Stop Monitoring</ur-button>
+      </div>
+  </div>
 }

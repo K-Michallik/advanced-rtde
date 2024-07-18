@@ -32,7 +32,10 @@ export class RtdeService {
     const fullUrl = `${this.backendProtocol}//${this.backendUrl}/start`;
     return this.http.post(fullUrl, {}).pipe(
       tap({
-        next: () => this.startPolling(),
+        next: () => {
+          this.startPolling();
+          this.errorSubject.next(null);  // Clear the error subject on successful start
+        },
         error: error => this.errorSubject.next(error.message)
       })
     );
@@ -42,7 +45,10 @@ export class RtdeService {
     const fullUrl = `${this.backendProtocol}//${this.backendUrl}/stop`;
     return this.http.post(fullUrl, {}).pipe(
       tap({
-        next: () => this.stopPolling(),
+        next: () => {
+          this.stopPolling();
+          this.errorSubject.next(null);  // Clear the error subject on successful stop
+        },
         error: error => this.errorSubject.next(error.message)
       })
     );
