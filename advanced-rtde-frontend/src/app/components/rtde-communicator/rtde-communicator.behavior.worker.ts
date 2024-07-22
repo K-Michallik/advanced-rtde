@@ -10,7 +10,8 @@ import { RtdeCommunicatorNode } from './rtde-communicator.node';
 // factory is required
 const createApplicationNode = (): OptionalPromise<RtdeCommunicatorNode> => ({
     type: 'urcaps-r-us-advanced-rtde-frontend-rtde-communicator',    // type is required
-    version: '1.0.0'     // version is required
+    version: '1.0.0',     // version is required
+    monitorState: false,
 });
 
 // generatePreamble is optional

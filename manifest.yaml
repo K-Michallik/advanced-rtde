@@ -17,5 +17,9 @@ artifacts:
         containerPort: 52761
         protocol: http
         proxyUrl: /
+      - id: websocket-api
+        containerPort: 52761
+        protocol: websocket
+        proxyUrl: /
     services:
       - service: urcontrol-rtde

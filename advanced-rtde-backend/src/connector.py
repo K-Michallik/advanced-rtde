@@ -147,6 +147,8 @@ class RTDEConnect:
         """
         self.con.send_pause()
         self.con.disconnect()
+        logging.info("RTDE connection shutdown.")
+        
 
     @staticmethod
     def _csvparse(csvlist, parsed_dict):

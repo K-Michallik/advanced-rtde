@@ -1,31 +1,45 @@
 @if (applicationNode) {
-  <div class="component">
-      <div class="section">
-          <h1>Robot State Monitor</h1>
-          @if (runtimeState$ | async; as runtimeState) {
-              <h3>Runtime State: {{ runtimeState }}</h3>
-          }
-          @if (safetyStatus$ | async; as safetyStatus) {
-              <h3>Safety Status: {{ safetyStatus }}</h3>
-          }
-          @if (actualTcpPose$ | async; as actualTcpPose) {
-              <div>
-                  <h3>Actual TCP Pose:</h3>
-                  <ul>
-                    <li>X: {{ actualTcpPose[0] | number:'1.4-4' }}</li>
-                    <li>Y: {{ actualTcpPose[1] | number:'1.4-4' }}</li>
-                    <li>Z: {{ actualTcpPose[2] | number:'1.4-4' }}</li>
-                    <li>RX: {{ actualTcpPose[3] | number:'1.4-4' }}</li>
-                    <li>RY: {{ actualTcpPose[4] | number:'1.4-4' }}</li>
-                    <li>RZ: {{ actualTcpPose[5] | number:'1.4-4' }}</li>
-                </ul>
-              </div>
-          }
-          @if (error$ | async; as errorMessage) {
-              <p>{{ errorMessage }}</p>
-          }
-          <ur-button (handleClick)="startMonitoring()" [disabled]="isMonitoring">Start Monitoring</ur-button>
-          <ur-button (handleClick)="stopMonitoring()" [disabled]="!isMonitoring">Stop Monitoring</ur-button>
-      </div>
-  </div>
-}
+    <div class="component">
+        <div class="section">
+            <h1>Robot State Monitor</h1>
+            @if (data$ | async; as data) {
+                <h3>Runtime State: {{ data.runtime_state }}</h3>
+                <h3>Safety Status: {{ data.safety_status }}</h3>
+                <div>
+                    <h3>Actual TCP Pose:</h3>
+                    <ul>
+                        <li>X: {{ data.actual_TCP_pose[0] | number:'1.4-4' }}</li>
+                        <li>Y: {{ data.actual_TCP_pose[1] | number:'1.4-4' }}</li>
+                        <li>Z: {{ data.actual_TCP_pose[2] | number:'1.4-4' }}</li>
+                        <li>RX: {{ data.actual_TCP_pose[3] | number:'1.4-4' }}</li>
+                        <li>RY: {{ data.actual_TCP_pose[4] | number:'1.4-4' }}</li>
+                        <li>RZ: {{ data.actual_TCP_pose[5] | number:'1.4-4' }}</li>
+                    </ul>
+                </div>
+            }
+            @if (randomNumber$ | async; as num) {
+                <p><strong>Random Number:</strong> {{ num }}</p>
+            }
+            <ur-button (handleClick)="startMonitoring()" [disabled]="isMonitoring">Start Monitoring</ur-button>
+            <ur-button (handleClick)="stopMonitoring()" [disabled]="!isMonitoring">Stop Monitoring</ur-button>
+            <ur-button (handleClick)="getRandomNumber()">Get Random number</ur-button>
+        </div>
+        <div>
+            <h2>Digital Output Changer</h2>
+            <h3>Select an output to change:</h3>
+        </div>
+        <div class="dropdown-menu">
+            <ur-dropdown
+            [options]="outputs"
+            [label]="'Digital Output'"
+            [placeholder]="'- Select -'"
+            [selectedOption]="output"
+            (selectionChange)="selectionChange($event)"
+        ></ur-dropdown>
+        </div>
+        <div class="section">
+            <ur-button (handleClick)="setDigitalOutput(1)">Set High[1]</ur-button>
+            <ur-button (handleClick)="setDigitalOutput(0)">Set Low[0]</ur-button>
+        </div>
+    </div>
+  }
