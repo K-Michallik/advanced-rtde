@@ -22,7 +22,6 @@ export class RtdeCommunicatorComponent implements ApplicationPresenter, OnChange
     readonly data$ = this.beService.data$;
     readonly randomNumber$ = this.beService.randomNumber$;
 
-    protected isMonitoring: boolean = false;
     private backendWebsocketUrl: string;
     private backendHttpUrl: string;
 
@@ -43,6 +42,17 @@ export class RtdeCommunicatorComponent implements ApplicationPresenter, OnChange
     set applicationNode(value: RtdeCommunicatorNode) {
         this._applicationNode = value;
         this.cd.detectChanges();
+    }
+
+    // Getter for isMonitoring
+    get isMonitoring(): boolean {
+      return this.applicationNode.monitorState;
+    }
+
+    // Setter for isMonitoring
+    set isMonitoring(value: boolean) {
+      this.applicationNode.monitorState = value;
+      this.saveNode();
     }
 
     ngOnChanges(changes: SimpleChanges): void {
@@ -74,21 +84,16 @@ export class RtdeCommunicatorComponent implements ApplicationPresenter, OnChange
         if (changes?.applicationAPI && this.applicationAPI) {
             this.output = this.applicationNode.digitalOutput !== undefined
             ? this.outputs[this.applicationNode.digitalOutput] : "";
-            this.isMonitoring = this.applicationNode.monitorState;
         }
     }
 
     startMonitoring(): void {
-        this.applicationNode.monitorState = true;
         this.isMonitoring = true;
-        this.saveNode();
         this.beService.connect(this.backendWebsocketUrl);
       }
     
       stopMonitoring(): void {
-        this.applicationNode.monitorState = false;
         this.isMonitoring = false;
-        this.saveNode();
         this.beService.disconnect();
       }
 

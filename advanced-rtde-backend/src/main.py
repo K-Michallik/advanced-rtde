@@ -101,8 +101,12 @@ async def set_digital_output(request: DigitalOutputRequest, rtde_connect: RTDECo
 
         if request.offset == 0:  # Standard digital outputs
             rtde_connect.send("std_outputs", ["standard_digital_output_mask", "standard_digital_output"], [mask, new_state])
+            # Reset the mask
+            rtde_connect.send("std_outputs", ["standard_digital_output_mask", "standard_digital_output"], [0, new_state])
         elif request.offset == 8:  # Configurable digital outputs
             rtde_connect.send("conf_outputs", ["configurable_digital_output_mask", "configurable_digital_output"], [mask, new_state])
+            # Reset the mask
+            rtde_connect.send("conf_outputs", ["configurable_digital_output_mask", "configurable_digital_output"], [0, new_state])
         else:
             return {"status": "error", "message": f"Unknown offset: {request.offset}"} 
 
