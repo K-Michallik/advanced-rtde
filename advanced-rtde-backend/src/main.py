@@ -11,24 +11,30 @@ app = FastAPI()
 ROBOT_HOST = 'urcontrol-rtde'
 CONFIG_FILENAME = 'rtdeIO.xml'
 
+
 class RTDEConnection:
     def __init__(self, robot_host: str, config_filename: str):
         self.connection = RTDEConnect(robot_host, config_filename)
     
     def get_connection(self):
+        self.connection.check_and_reconnect()
         return self.connection
+
 
 # Create a singleton instance of RTDEConnection
 rtde_connection_instance = RTDEConnection(ROBOT_HOST, CONFIG_FILENAME)
+
 
 # Dependency injection function
 def get_rtde_connection():
     return rtde_connection_instance.get_connection()
 
+
 class DigitalOutputRequest(BaseModel):
     digital_output: int
     value: int
     offset: int = 0
+
 
 # WebSocket manager to keep track of active connections
 class ConnectionManager:
@@ -49,7 +55,9 @@ class ConnectionManager:
         for connection in self.active_connections:
             await connection.send_text(message)
 
+
 manager = ConnectionManager()
+
 
 def create_message(data):
     return json.dumps({
@@ -63,6 +71,7 @@ def create_message(data):
         'actual_digital_output_bits': data.actual_digital_output_bits,
     })
 
+
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket, rtde_connect: RTDEConnect = Depends(get_rtde_connection)):
     await manager.connect(websocket)
@@ -72,15 +81,17 @@ async def websocket_endpoint(websocket: WebSocket, rtde_connect: RTDEConnect = D
             if data:
                 message = create_message(data)
                 await manager.broadcast(message)
-            await asyncio.sleep(0.1)  # Adjust sleep time as necessary
+            await asyncio.sleep(1 / rtde_connect.frequency)  # Can adjust streaming frequency to the frontend here.
     except WebSocketDisconnect:
         manager.disconnect(websocket)
     except Exception as e:
         print(f"Error: {e}")
 
+
 @app.get("/random-number")
 async def get_random_number():
     return {"random_number": random.randint(1, 1000)}
+
 
 @app.post("/set-digital-output")
 async def set_digital_output(request: DigitalOutputRequest, rtde_connect: RTDEConnect = Depends(get_rtde_connection)):
@@ -102,3 +113,12 @@ async def set_digital_output(request: DigitalOutputRequest, rtde_connect: RTDECo
 @app.on_event("shutdown")
 def shutdown_event():
     rtde_connection_instance.get_connection().shutdown()
+    
+    
+@app.get("/disconnect")
+async def disconnect(rtde_connect: RTDEConnect = Depends(get_rtde_connection)):
+    try:
+        rtde_connect.shutdown()
+        return {"status": "success", "message": "RTDE connection shut down successfully"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}

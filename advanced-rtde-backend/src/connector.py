@@ -21,6 +21,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import asyncio
 import sys
 import logging
 import rtde.rtde as rtde
@@ -42,7 +43,7 @@ class RTDEConnect:
     _inputlist = RTDE_inputs
     _outputlist = RTDE_outputs
 
-    def __init__(self, robot_ip, filename, frequency=500):
+    def __init__(self, robot_ip, filename, frequency=125):
         self.robotIP = robot_ip
         self.port = 30004
         self.con = rtde.RTDE(self.robotIP, self.port)
@@ -55,6 +56,7 @@ class RTDEConnect:
         self.outputDict = {}
         self.inputKeys = {}
         self.controlVersion = None
+        self.keep_alive_task = None
         self._rtdein, self._rtdeout = RTDEConnect._create_dicts(self._rtdein, self._rtdeout)
         self.programState = {
             0: 'Stopping',
@@ -65,9 +67,9 @@ class RTDEConnect:
             5: 'Resuming',
             6: 'Retracting'
         }
-        self._initialize()
+        self.connect()
 
-    def _initialize(self):
+    def connect(self):
         self.con.connect()
         self.controlVersion = self.con.get_controller_version()
         if self.controlVersion[0] not in [5, 6]:
@@ -100,13 +102,20 @@ class RTDEConnect:
         if not self.con.send_start():
             print('Could not connect. Exiting...')
             sys.exit()
+        
+        self.start_keep_alive()
 
     def receive(self):
         """
         Receive a packet of data from RTDE at the frequency specified in instantiation of the Connector.
         :return: Packet of output data
         """
-        return self.con.receive()
+        try:
+            data = self.con.receive()
+            return data
+        except rtde.RTDEException as e:
+            logging.error(f"Error receiving data: {e}")
+            raise
 
     def send(self, key, field, value):
         """
@@ -145,9 +154,21 @@ class RTDEConnect:
         Safely disconnects from RTDE and shuts down.
         :return: None
         """
-        self.con.send_pause()
-        self.con.disconnect()
-        logging.info("RTDE connection shutdown.")
+        try:
+            self.stop_keep_alive()
+            if self.con.is_connected():
+                self.con.send_pause()
+                logging.info("RTDE synchronization paused")
+            else:
+                logging.warning("RTDE already disconnected before shutdown")
+        except Exception as e:
+            logging.error(f"Error pausing RTDE synchronization: {e}")
+        
+        try:
+            self.con.disconnect()
+            logging.info("RTDE connection shutdown.")
+        except Exception as e:
+            logging.error(f"Error disconnecting RTDE: {e}")
         
 
     @staticmethod
@@ -167,6 +188,44 @@ class RTDEConnect:
         inputs = cls._csvparse(cls._inputlist, input_dict)
         outputs = cls._csvparse(cls._outputlist, output_dict)
         return inputs, outputs
+    
+    
+    def is_connected(self):
+        return self.con.is_connected()
+    
+
+    def check_and_reconnect(self):
+        if not self.con.is_connected():
+            logging.info("Reconnecting to RTDE...")
+            self.connect()
+    
+    
+    async def _keep_alive(self):
+        while True:
+            try:
+                if self.is_connected():
+                    # Receive a small data packet to keep the connection alive
+                    self.receive()
+                await asyncio.sleep(60)  # Adjust the interval as needed
+            except rtde.RTDEException as e:
+                logging.error(f"Keep-alive error: {e}")
+                break
+
+
+    def start_keep_alive(self):
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:  # No running event loop
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+
+        if self.keep_alive_task is None or self.keep_alive_task.cancelled():
+            self.keep_alive_task = loop.create_task(self._keep_alive())
+
+
+    def stop_keep_alive(self):
+        if self.keep_alive_task is not None:
+            self.keep_alive_task.cancel()
 
 
 if __name__ == "__main__":
